@@ -156,7 +156,7 @@ class SpecDecodeWorker(LoraNotSupportedWorkerBase):
             "vllm_config"
         ].parallel_config
         if ngram_prompt_lookup_max > 0:
-            proposer_worker = NGramWorker(**draft_worker_kwargs)
+            proposer_worker = TestWorker(**draft_worker_kwargs)
             proposer_worker.set_ngram_window_size(
                 ngram_prompt_lookup_min, ngram_prompt_lookup_max
             )
@@ -168,8 +168,6 @@ class SpecDecodeWorker(LoraNotSupportedWorkerBase):
                 proposer_worker = MLPSpeculatorWorker(**draft_worker_kwargs)
             elif draft_model_config.hf_config.model_type == "medusa":
                 proposer_worker = MedusaWorker(**draft_worker_kwargs)
-            elif draft_model_config.hf_config.model_type == "test":
-                proposer_worker = TestWorker(**draft_worker_kwargs)
             else:
                 if draft_tp == 1:
                     draft_worker_kwargs["model_runner_cls"] = TP1DraftModelRunner
