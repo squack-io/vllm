@@ -1609,6 +1609,14 @@ class LLMEngine:
         if self.log_stats:
             stats = self._get_stats(scheduler_outputs, model_output,
                                     finished_before, skip)
+            
+            # Print NGram match statistics if available
+            if (model_output and hasattr(model_output[0], 'spec_decode_worker_metrics') 
+                and model_output[0].spec_decode_worker_metrics is not None 
+                and hasattr(model_output[0].spec_decode_worker_metrics, 'ngram_match_stats')):
+                logger.info("NGram Match Statistics: %s", 
+                           model_output[0].spec_decode_worker_metrics.ngram_match_stats)
+            
             for logger in self.stat_loggers.values():
                 logger.log(stats)
 

@@ -50,7 +50,8 @@ class NGramWorker(NonLLMProposerWorkerBase):
 
     def __init__(self, *args, **kwargs):
         # Get local_rank/vocab_size from kwargs attribute
-        self.local_rank = kwargs["local_rank"]self.vocab_size = kwargs["vllm_config"].model_config.get_vocab_size()
+        self.local_rank = kwargs["local_rank"]
+        self.vocab_size = kwargs["vllm_config"].model_config.get_vocab_size()
         self.match_stats = NGramMatchStats()
         
         # Lazy initialization list.
@@ -79,8 +80,6 @@ class NGramWorker(NonLLMProposerWorkerBase):
         self,
         execute_model_req: ExecuteModelRequest,
         sample_len: int,
-        # Unused parameter. NGramWorker does not use the KV Cache and
-        # therefore does not need this parameter.
         seq_ids_with_bonus_token_in_last_step: Set[int],
     ) -> Tuple[Optional[List[Optional[SamplerOutput]]], bool]:
         """NGram match algo to pick proposal candidate. Returns the list of
@@ -161,23 +160,24 @@ class NGramWorker(NonLLMProposerWorkerBase):
             if token_id_list[idx] is None:
                 outputs.append(None)
             else:
-                outputs.append(
-                    SamplerOutput(
-                        outputs=None,
-                        sampled_token_probs=token_prob_list[idx],
-                        logprobs=torch.zeros((sample_len, self.vocab_size),
-                                             dtype=torch.float32,
-                                             device=self.device),
-                        sampled_token_ids=token_id_list[idx],
-                    ))
+                output = SamplerOutput(
+                    outputs=None,
+                    sampled_token_probs=token_prob_list[idx],
+                    logprobs=torch.zeros((sample_len, self.vocab_size),
+                                         dtype=torch.float32,
+                                         device=self.device),
+                    sampled_token_ids=token_id_list[idx],
+                )
+                # Add match statistics to the output
+                if hasattr(output, 'spec_decode_worker_metrics'):
+                    output.spec_decode_worker_metrics.ngram_match_stats = self.match_stats.get_stats()
+                outputs.append(output)
 
         return outputs, False
 
     def get_spec_proposals(
         self,
         execute_model_req: ExecuteModelRequest,
-        # Unused parameter. NGramWorker does not use the KV Cache and
-        # therefore does not need this parameter.
         seq_ids_with_bonus_token_in_last_step: Set[int],
     ) -> SpeculativeProposals:
         """Produce speculations given an input batch of sequences. The number of
