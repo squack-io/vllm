@@ -223,7 +223,13 @@ class KVCacheManager:
                 self.max_num_blocks_per_req - len(req_blocks),
             )
             if num_new_blocks <= 0:
-                # Cannot allocate any new blocks, return None to indicate failure
+                logger.warning(
+                    f"Failed to allocate new blocks for request {request.request_id}. "
+                    f"num_new_blocks: {num_new_blocks}, "
+                    f"num_preallocate_blocks: {self.num_preallocate_blocks}, "
+                    f"num_free_blocks: {self.block_pool.get_num_free_blocks()}, "
+                    f"max_num_blocks_per_req: {self.max_num_blocks_per_req}"
+                )
                 return None
 
             # Concatenate the computed block IDs and the new block IDs.
