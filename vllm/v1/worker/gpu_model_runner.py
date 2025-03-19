@@ -588,6 +588,7 @@ class GPUModelRunner(LoRAModelRunnerMixin):
             logits_indices = attn_metadata.query_start_loc[1:] - 1
             spec_decode_metadata = None
         else:
+            print("SPEC DECODING ENABLED")
             # Get the number of draft tokens for each request.
             # Iterate over the dictionary rather than all requests since not all
             # requests have draft tokens.
